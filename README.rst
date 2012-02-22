@@ -62,7 +62,7 @@ including how far they are lagging behind the master.
 
 If you lose node1 you can then run this on node2::
 
-  repmgr -f /var/lib/pgsql/repmgr/repmgr.conf standby promote 
+  repmgr -f /var/lib/pgsql/repmgr/repmgr.conf standby promote
 
 To make node2 the new master.  Then on node3 run::
 
@@ -74,7 +74,7 @@ If now we want to add a new node, we can a prepare a new server (node4)
 and run::
 
   repmgr -D /var/lib/pgsql/9.0 standby clone node2
-  
+
 And if a previously failed node becomes available again, such as
 the lost node1 above, you can get it to resynchronize by only copying
 over changes made while it was down using.  That hapens with what's
@@ -91,7 +91,7 @@ Installation Outline
 
 To install and use repmgr and repmgrd follow these steps:
 
-1. Build repmgr programs 
+1. Build repmgr programs
 
 2. Set up trusted copy between postgres accounts, needed for the
    ``STANDBY CLONE`` step
@@ -131,7 +131,7 @@ If you need to remove the source code temporary files from this directory,
 that can be done like this::
 
   make USE_PGXS=1 clean
-  
+
 See below for building notes specific to RedHat Linux variants.
 
 Using a full source code tree
@@ -143,7 +143,7 @@ The resulting subdirectory must be named ``contrib/repmgr``, without any
 version number::
 
   cp repmgr.tar.gz ${postgresql_sources}/contrib
-  cd ${postgresql_sources}/contrib 
+  cd ${postgresql_sources}/contrib
   tar xvzf repmgr-1.0.tar.gz
   cd repmgr
   make
@@ -172,7 +172,7 @@ occur::
 
   /usr/bin/ld: cannot find -lxslt
   /usr/bin/ld: cannot find -lpam
-  
+
 Install the following packages to correct those::
 
   yum install libxslt-devel
@@ -210,7 +210,7 @@ here is an example sessions demonstrating the problem case appearing::
   ---> Package postgresql90-devel.i386 0:9.0.2-2PGDG.rhel5 set to be updated
   ---> Package postgresql90-devel.x86_64 0:9.0.2-2PGDG.rhel5 set to be updated
   --> Finished Dependency Resolution
-  
+
   Dependencies Resolved
 
   =========================================================================
@@ -272,7 +272,7 @@ You can also make a deb package of repmgr using::
 
   make USE_PGXS=1 deb
 
-This will build a Debian package one level up from where you build, normally the 
+This will build a Debian package one level up from where you build, normally the
 same directory that you have your repmgr/ directory in.
 
 Confirm software was built correctly
@@ -301,18 +301,18 @@ Below this binary installation base directory is referred to as PGDIR.
 Set up trusted copy between postgres accounts
 ---------------------------------------------
 
-Initial copy between nodes uses the rsync program running over ssh.  For this 
-to work, the postgres accounts on each system need to be able to access files 
+Initial copy between nodes uses the rsync program running over ssh.  For this
+to work, the postgres accounts on each system need to be able to access files
 on their partner node without a password.
 
-First generate a ssh key, using an empty passphrase, and copy the resulting 
+First generate a ssh key, using an empty passphrase, and copy the resulting
 keys and a maching authorization file to a privledged user on the other system::
 
   [postgres@node1]$ ssh-keygen -t rsa
   Generating public/private rsa key pair.
-  Enter file in which to save the key (/var/lib/pgsql/.ssh/id_rsa): 
-  Enter passphrase (empty for no passphrase): 
-  Enter same passphrase again: 
+  Enter file in which to save the key (/var/lib/pgsql/.ssh/id_rsa):
+  Enter passphrase (empty for no passphrase):
+  Enter same passphrase again:
   Your identification has been saved in /var/lib/pgsql/.ssh/id_rsa.
   Your public key has been saved in /var/lib/pgsql/.ssh/id_rsa.pub.
   The key fingerprint is:
@@ -322,7 +322,7 @@ keys and a maching authorization file to a privledged user on the other system::
   [postgres@node1]$ cd ~/.ssh
   [postgres@node1]$ scp id_rsa.pub id_rsa authorized_keys postgres@node2:
 
-Login as a user on the other system, and install the files into the postgres 
+Login as a user on the other system, and install the files into the postgres
 user's account::
 
   [user@node2 ~]$ sudo chown postgres.postgres authorized_keys id_rsa.pub id_rsa
@@ -331,7 +331,7 @@ user's account::
   [user@node2 ~]$ sudo mv authorized_keys id_rsa.pub id_rsa ~postgres/.ssh
   [user@node2 ~]$ sudo chmod -R go-rwx ~postgres/.ssh
 
-Now test that ssh in both directions works.  You may have to accept some new 
+Now test that ssh in both directions works.  You may have to accept some new
 known hosts in the process.
 
 Primary server configuration
@@ -343,13 +343,13 @@ is a sample of changes to the ``postgresql.conf`` file::
   listen_addresses='*'
   wal_level = 'hot_standby'
   archive_mode = on
-  archive_command = 'cd .'	 # we can also use exit 0, anything that 
+  archive_command = 'cd .'	 # we can also use exit 0, anything that
                              # just does nothing
   max_wal_senders = 10
   wal_keep_segments = 5000     # 80 GB required on pg_xlog
   hot_standby = on
 
-Also you need to add the machines that will participate in the cluster in 
+Also you need to add the machines that will participate in the cluster in
 ``pg_hba.conf`` file.  One possibility is to trust all connections from the
 replication users from all internal addresses, such as::
 
@@ -375,23 +375,23 @@ This assumes you've already followed the steps in "Installation Outline" to
 install repmgr and repmgrd on the system.
 
 A normal production installation of ``repmgr`` will normally involve two
-different systems running on the same port, typically the default of 5432, 
+different systems running on the same port, typically the default of 5432,
 with both using files owned by the ``postgres`` user account.  This
 walkthrough assumes the following setup:
 
-* A primary (master) server called "node1," running as the "postgres" user 
+* A primary (master) server called "node1," running as the "postgres" user
   who is also the owner of the files. This server is operating on port 5432.  This
   server will be known as "node1" in the cluster "test".
 
-* A secondary (standby) server called "node2," running as the "postgres" user 
+* A secondary (standby) server called "node2," running as the "postgres" user
   who is also the owner of the files. This server is operating on port 5432.  This
   server will be known as "node2" in the cluster "test".
 
 * Another standby server called "node3" with a similar configuration to "node2".
 
-* The Postgress installation in each of the above is defined as $PGDATA, 
+* The Postgress installation in each of the above is defined as $PGDATA,
   which is represented here as ``/var/lib/pgsql/9.0/data``
-  
+
 Creating some sample data
 -------------------------
 
@@ -401,7 +401,7 @@ data in this cluster to replication, you can create some like this::
 
     createdb pgbench
     pgbench -i -s 10 pgbench
-	
+
 Examples below will use the database name ``pgbench`` to match this.
 Substitute the name of your database instead.  Note that the standby
 nodes created here will include information for every database in the
@@ -432,12 +432,12 @@ installation on the existing standby nodes.
 
 * Stop any server on "node2" and "node3".  You can confirm the database
   servers running using a command like this::
-  
+
     ps -eaf | grep postgres
-	
+
   And looking for the various database server processes:  server, logger,
   wal writer, and autovacuum launcher.
-  
+
 * Go to "node2" and "node3" database directories and remove the PostgreSQL installation::
 
     cd $PGDATA
@@ -474,7 +474,7 @@ Possible sources for a problem here include:
   this situation you would be able to connect to the "node1" server
   on itself, but not from any other host, and you'd just get a timeout
   when trying rather than a proper error message.
-	 
+
 * The ``pg_hba.conf`` file does not list appropriate statements to allow
   this user to login.  In this case you should connect to the server,
   but see an error message mentioning the ``pg_hba.conf``.
@@ -580,7 +580,7 @@ Some tests you might do at this point include:
   repl_status view advances accordingly.
 
 * Verify that you can run queries against the standby server, but
-  cannot make insertions into the standby database.  
+  cannot make insertions into the standby database.
 
 Simulating the failure of the primary server
 --------------------------------------------
@@ -588,7 +588,7 @@ Simulating the failure of the primary server
 To simulate the loss of the primary server, simply stop the "node1" server.
 At this point, the standby contains the database as it existed at the time of
 the "failure" of the primary server.  If looking at ``repl_status`` on
-"node2", you should see the time_lag value increase the longer "node1" 
+"node2", you should see the time_lag value increase the longer "node1"
 is down.
 
 Promoting the Standby to be the Primary
@@ -610,7 +610,7 @@ restoring the original roles, type the following on node1::
   repmgr -D $PGDATA -d pgbench -p 5432 -U repmgr -R postgres --verbose --force standby clone node2
 
 Then start the "node1" server, which is now acting as a standby server.
-Check 
+Check
 
 Make sure the record(s) inserted the earlier step are still available on the
 now standby (prime).  Confirm the database on "node1" is read-only.
@@ -623,7 +623,7 @@ Now restore to the original configuration by stopping
 primary server, then bringing up "node2" as a standby with a valid
 ``recovery.conf`` file.
 
-Stop the "node2" server::
+Stop the "node2" server and type this on "node1"::
 
   repmgr -f /var/lib/pgsql/repmgr/repmgr.conf standby promote
 
@@ -645,7 +645,7 @@ Another test setup assumes you might be using the default installation of
 PostgreSQL on port 5432 for some other purpose, and instead relocates these
 instances onto different ports running as different users.  In places where
 ``127.0.0.1`` is used as a host name, a more traditional configuration
-would instead use the name of the relevant host for that parameter. 
+would instead use the name of the relevant host for that parameter.
 You can usually leave out changes to the port number in this case too.
 
 * A primary (master) server called "prime," with a user as "prime," who is
@@ -658,8 +658,8 @@ You can usually leave out changes to the port number in this case too.
 
 * A database exists on "prime" called "testdb."
 
-* The Postgress installation in each of the above is defined as $PGDATA, 
-  which is represented here with ``/data/prime`` as the "prime" server and 
+* The Postgress installation in each of the above is defined as $PGDATA,
+  which is represented here with ``/data/prime`` as the "prime" server and
   ``/data/standby`` as the "standby" server.
 
 You might setup such an installation by adjusting the login script for the
@@ -767,7 +767,7 @@ Some tests you might do at this point include:
   repl_status view advances accordingly.
 
 * Verify that you can run queries against the standby server, but
-  cannot make insertions into the standby database.  
+  cannot make insertions into the standby database.
 
 Simulating the failure of the primary server
 --------------------------------------------
@@ -807,7 +807,7 @@ Now restore to the original configuration by stopping the
 primary server, then bringing up "standby" as a standby with a valid
 ``recovery.conf`` file on "standby".
 
-Stop the "standby" server::
+Stop the "standby" server and type this on "prime"::
 
   repmgr -f /home/prime/repmgr/repmgr.conf standby promote
 
@@ -834,7 +834,7 @@ Configuration File
 ``repmgr.conf`` is looked for in the directory repmgrd or repmgr exists in.
 The configuration file should have 3 lines:
 
-1. cluster: A string (single quoted) that identify the cluster we are on 
+1. cluster: A string (single quoted) that identify the cluster we are on
 
 2. node: An integer that identify our node in the cluster
 
@@ -849,10 +849,10 @@ Command line syntax
 The current supported syntax for the program can be seen using::
 
   repmgr --help
-  
+
 The output from this program looks like this::
 
-  repmgr: Replicator manager 
+  repmgr: Replicator manager
   Usage:
    repmgr [OPTIONS] master  {register}
    repmgr [OPTIONS] standby {register|clone|promote|follow}
@@ -893,7 +893,7 @@ repmgr commands
 Not all of these commands need the ``repmgr.conf`` file, but they need to be able to
 connect to the remote and local databases.
 
-You can teach it which is the remote database by using the -h parameter or 
+You can teach it which is the remote database by using the -h parameter or
 as a last parameter in standby clone and standby follow. If you need to specify
 a port different then the default 5432 you can specify a -p parameter.
 Standby is always considered as localhost and a second -p parameter will indicate
@@ -909,9 +909,9 @@ its port if is different from the default one.
   * Registers a standby in a cluster, it needs to be executed before
     repmgrd will function on the node.
 
-* standby clone [node to be cloned] 
+* standby clone [node to be cloned]
 
-  * Does a backup via ``rsync`` of the data directory of the primary. And it 
+  * Does a backup via ``rsync`` of the data directory of the primary. And it
     creates the recovery file we need to start a new hot standby server.
     It doesn't need the ``repmgr.conf`` so it can be executed anywhere on the
     new node.  You can change to the directory you want the new database
@@ -932,7 +932,7 @@ its port if is different from the default one.
     executing ``pg_ctl``; check the server startup script you are using
     and try to match what it does.
 
-* standby promote 
+* standby promote
 
   * Allows manual promotion of a specific standby into a new primary in the
     event of a failover.  This needs to be executed on the same directory
@@ -944,7 +944,7 @@ its port if is different from the default one.
 
     That will restart your standby postgresql service.
 
-* standby follow 
+* standby follow
 
     * Allows the standby to base itself to the new primary passed as a
       parameter.  This needs to be executed on the same directory where the
@@ -962,19 +962,19 @@ Command line syntax
 The current supported syntax for the program can be seen using::
 
   repmgrd --help
-  
+
 The output from this program looks like this::
 
-  repmgrd: Replicator manager daemon 
+  repmgrd: Replicator manager daemon
   Usage:
    repmgrd [OPTIONS]
-  
+
   Options:
     --help                    show this help, then exit
     --version                 output version information, then exit
     --verbose                 output verbose activity information
     -f, --config_file=PATH    database to connect to
-  
+
   repmgrd monitors a cluster of servers.
 
 The ``--verbose`` option can be useful in troubleshooting issues with
@@ -1010,8 +1010,8 @@ in ``repl_node``, consult the ``repl_status`` view::
   psql -d postgres -c "SELECT * FROM repmgr_test.repl_status"
 
 This view shows the latest monitor info from every node.
- 
-* replication_lag: in bytes.  This is how far the latest xlog record 
+
+* replication_lag: in bytes.  This is how far the latest xlog record
   we have received is from master.
 
 * apply_lag: in bytes.  This is how far the latest xlog record
@@ -1023,7 +1023,7 @@ Error codes
 -----------
 
 When the repmgr or repmgrd program exits, it will set one of the
-following 
+following
 
 * SUCCESS 0:  Program ran successfully.
 * ERR_BAD_CONFIG 1:  One of the configuration checks the program makes failed.
